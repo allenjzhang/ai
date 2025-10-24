@@ -49,8 +49,9 @@ runs:
         github-token: ${{ inputs.github_token }}
         script: |
           const fs = require('fs');
+          if (!fs.existsSync('review.md')) {console.log("review.md is not found"); return;}
           const body = fs.readFileSync('review.md', 'utf8');
-          if (!body) return;
+          if (!body) {console.log("review.md has no body"); return;}
           const pr = context.payload.pull_request;
           if (pr) {
             await github.rest.issues.createComment({
