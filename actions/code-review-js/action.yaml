@@ -38,9 +38,9 @@ runs:
       env:
         GITHUB_TOKEN: ${{ inputs.github_token }}
         OPENAI_API_KEY: ${{ inputs.openai_api_key }}
-      run: node dist/review.js
+      run: node ${{ github.action_path }}/dist/review.js
       shell: bash
-      working-directory: ${{ github.action_path }}
+      working-directory: ${{ github.workspace }}
 
     - name: Post review as PR comment
       if: ${{ inputs.comment_on_pr == 'true' && github.event_name == 'pull_request' }}
@@ -62,3 +62,4 @@ runs:
           } else {
             core.setOutput('review', body);
           }
+      working-directory: ${{ github.workspace }}
