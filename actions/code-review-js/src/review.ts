@@ -1,9 +1,13 @@
 import { Octokit } from "@octokit/rest";
-import OpenAI from "openai";
+import { AzureOpenAI } from "openai";
 import * as fs from "fs";
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+const endpoint = process.env.AZURE_OPENAI_BASE_URL;
+const deployment = process.env.AZURE_OPENAI_DEPLOYMENT_NAME;
+const model_name = process.env.OPENAI_MODEL_NAME || "gpt-3.5-turbo";
+const apiKey = process.env.AZURE_OPENAI_API_KEY;
+const apiVersion = process.env.AZURE_OPENAI_VERSION;
 const OUTPUT_FILE = "review.md";
 
 // Create review.md if it doesn't exist
@@ -15,12 +19,21 @@ if (!fs.existsSync("review.md")) {
   );
 }
 
-if (!GITHUB_TOKEN || !OPENAI_API_KEY) {
-  throw new Error("Missing GITHUB_TOKEN or OPENAI_API_KEY");
+if (!GITHUB_TOKEN) {
+  throw new Error("Missing GITHUB_TOKEN");
+}
+
+if (!apiKey) {
+  throw new Error("Missing AZURE_OPENAI_API_KEY");
+}
+
+if (!endpoint) {
+  throw new Error("Missing AZURE_OPENAI_BASE_URL");
 }
 
 const octokit = new Octokit({ auth: GITHUB_TOKEN });
-const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
+const options = { endpoint, apiKey, deployment, apiVersion };
+const client = new AzureOpenAI(options);
 
 async function getChangedFiles(): Promise<string[]> {
   const eventPath = process.env.GITHUB_EVENT_PATH;
@@ -54,12 +67,12 @@ async function reviewFiles(files: string[]): Promise<string> {
     // TODO: Use repo's system prompts or guidelines if available
     const prompt = `You are a senior software engineer. Review the following file for code quality, bugs, and best practices. Provide a concise summary and actionable suggestions.\n\nFile: ${file}\n\n\`
 ${content.slice(0, 4000)}\u000A\``;
-    const resp = await openai.chat.completions.create({
-      // TODO: Experiment with different models or parameters as needed and let ENV variables control them
-      model: "gpt-3.5-turbo",
+    const resp = await client.chat.completions.create({
+      model: model_name,
       messages: [{ role: "user", content: prompt }],
       max_tokens: 500,
     });
+
     const review = resp.choices[0]?.message?.content?.trim();
     console.log("Review for", file, ":", review);
     summary += `## ${file}\n${review || "No feedback."}\n\n`;

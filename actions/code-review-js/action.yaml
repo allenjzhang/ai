@@ -4,9 +4,23 @@ inputs:
   github_token:
     description: "GitHub token"
     required: true
-  openai_api_key:
+  azure_openai_api_key:
     description: "OpenAI API key for LLM access."
     required: true
+  azure_openai_base_url:
+    description: "OpenAI API Base URL for LLM access."
+    required: true
+  azure_openai_deployment_name:
+      description: 'OpenAI Deployment Name'
+      required: true
+  azure_openai_version:
+      description: 'Azure OpenAI API version'
+      required: false
+      default: '2024-04-01-preview'
+  openai_model_name:
+      description: 'OpenAI Model Name'
+      required: false
+      default: 'gpt-3.5-turbo'
   comment_on_pr:
     description: "Whether to post the review as a PR comment."
     required: false
