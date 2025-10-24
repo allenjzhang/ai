@@ -2,7 +2,7 @@ name: "LLM Code Review"
 description: "Automated code review using an LLM (TypeScript). Analyzes changed files in PRs and posts a summary as a comment."
 inputs:
   github_token:
-    description: "GitHub token (use: ${{ secrets.GITHUB_TOKEN }})"
+    description: "GitHub token"
     required: true
   openai_api_key:
     description: "OpenAI API key for LLM access."
