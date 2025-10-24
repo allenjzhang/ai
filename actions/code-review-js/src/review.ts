@@ -1,0 +1,64 @@
+import { Octokit } from "@octokit/rest";
+import OpenAI from "openai";
+import * as fs from "fs";
+
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+const OUTPUT_FILE = "review.md";
+
+if (!GITHUB_TOKEN || !OPENAI_API_KEY) {
+  throw new Error("Missing GITHUB_TOKEN or OPENAI_API_KEY");
+}
+
+const octokit = new Octokit({ auth: GITHUB_TOKEN });
+const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
+
+async function getChangedFiles(): Promise<string[]> {
+  const eventPath = process.env.GITHUB_EVENT_PATH;
+  if (!eventPath) return [];
+  const event = JSON.parse(fs.readFileSync(eventPath, "utf8"));
+  if (event.pull_request) {
+    const { base, head, number } = event.pull_request;
+    const repo = event.repository;
+    const res = await octokit.repos.compareCommits({
+      owner: repo.owner.login,
+      repo: repo.name,
+      base: base.sha,
+      head: head.sha,
+    });
+    return res.data.files?.map((f) => f.filename) || [];
+  }
+  return [];
+}
+
+async function getFileContent(path: string): Promise<string> {
+  return fs.readFileSync(path, "utf8");
+}
+
+async function reviewFiles(files: string[]): Promise<string> {
+  let summary = "# LLM Code Review\n\n";
+  for (const file of files) {
+    if (!fs.existsSync(file) || fs.lstatSync(file).isDirectory()) continue;
+    const content = await getFileContent(file);
+    const prompt = `You are a senior software engineer. Review the following file for code quality, bugs, and best practices. Provide a concise summary and actionable suggestions.\n\nFile: ${file}\n\n\`
+${content.slice(0, 4000)}\u000A\``;
+    const resp = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: [{ role: "user", content: prompt }],
+      max_tokens: 500,
+    });
+    const review = resp.choices[0]?.message?.content?.trim();
+    summary += `## ${file}\n${review || "No feedback."}\n\n`;
+  }
+  return summary;
+}
+
+(async () => {
+  const files = await getChangedFiles();
+  if (!files.length) {
+    fs.writeFileSync(OUTPUT_FILE, "No changed files found.");
+    return;
+  }
+  const review = await reviewFiles(files);
+  fs.writeFileSync(OUTPUT_FILE, review);
+})();

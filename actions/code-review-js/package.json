@@ -1,0 +1,17 @@
+{
+  "name": "llm-code-review-action",
+  "version": "1.0.0",
+  "description": "GitHub Action for LLM-powered code review using TypeScript",
+  "main": "dist/review.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/review.js"
+  },
+  "dependencies": {
+    "@octokit/rest": "^20.0.0",
+    "openai": "^4.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}
