@@ -60,6 +60,7 @@ ${content.slice(0, 4000)}\u000A\``;
       max_tokens: 500,
     });
     const review = resp.choices[0]?.message?.content?.trim();
+    console.log("Review for", file, ":", review);
     summary += `## ${file}\n${review || "No feedback."}\n\n`;
   }
   return summary;
