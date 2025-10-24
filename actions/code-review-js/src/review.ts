@@ -47,8 +47,9 @@ async function getFileContent(path: string): Promise<string> {
 async function reviewFiles(files: string[]): Promise<string> {
   let summary = "# LLM Code Review\n\n";
   for (const file of files) {
-    console.log("Reviewing file:", file);
+    console.log("About to review file:", file);
     if (!fs.existsSync(file) || fs.lstatSync(file).isDirectory()) continue;
+    console.log("Reviewing file:", file);
     const content = await getFileContent(file);
     // TODO: Use repo's system prompts or guidelines if available
     const prompt = `You are a senior software engineer. Review the following file for code quality, bugs, and best practices. Provide a concise summary and actionable suggestions.\n\nFile: ${file}\n\n\`
