@@ -5,49 +5,50 @@ Build a butler agent that connects to Outlook and Gmail to summarize daily inbox
 
 ---
 ## Phase 0: Technology
-- [ ] Use TypeScript
-- [ ] Use MSAL
+- [x] Use TypeScript
+- [x] Use MSAL
 
 ## Phase 1: Project Setup & Infrastructure
 
 ### 1.1 Initialize Project
-- [ ] Create it under agents/butler folder
-- [ ] Initialize pnpm project (`pnpm init`)
-- [ ] Set up project structure (src/, tests/, etc.)
-- [ ] Create `.gitignore` file
-- [ ] Create initial README.md
+- [x] Create it under agents/butler folder
+- [x] Initialize pnpm project (`pnpm init`)
+- [x] Set up project structure (src/, tests/, etc.)
+- [x] Create `.gitignore` file
+- [x] Create initial README.md
 
 ### 1.2 Development Tools Setup
-- [ ] Install and configure ESLint 9
-- [ ] Set up ESLint configuration file
-- [ ] Add lint scripts to package.json
-- [ ] Set up TypeScript (if using) or configure JavaScript project
-- [ ] Add development dependencies (testing framework, etc.)
+- [x] Install and configure ESLint 9
+- [x] Set up ESLint configuration file
+- [x] Add lint scripts to package.json
+- [x] Set up TypeScript (if using) or configure JavaScript project
+- [x] Add development dependencies (testing framework, etc.)
 
 ### 1.3 Environment Configuration
-- [ ] Create `.env.example` file
-- [ ] Set up environment variable management
-- [ ] Document required environment variables
+- [x] Create `.env.example` file
+- [x] Set up environment variable management
+- [x] Document required environment variables
 
 ### 1.4 Library dependency management
+- [x] Add dependencies (MSAL, Graph, googleapis, openai)
 
 ---
 
 ## Phase 2: Microsoft Outlook Integration
 
 ### 2.1 Microsoft Authentication Setup
-- [ ] Research Microsoft Graph API authentication (no username/password)
-- [ ] Set up Azure AD App Registration
-- [ ] Implement Microsoft authentication flow (OAuth/MSAL)
-- [ ] Store and manage authentication tokens securely
-- [ ] Add unit tests for authentication
+- [x] Research Microsoft Graph API authentication (no username/password)
+- [ ] Set up Azure AD App Registration (manual in portal)
+- [x] Implement Microsoft authentication flow (OAuth/MSAL)
+- [x] Store and manage authentication tokens securely
+- [x] Add unit tests for authentication (via orchestrator mock)
 
 ### 2.2 Outlook Email Access
-- [ ] Implement Microsoft Graph API client
-- [ ] Create service to fetch emails from Outlook inbox
-- [ ] Implement email filtering (daily digest scope)
-- [ ] Add error handling for API calls
-- [ ] Add unit tests for email fetching
+- [x] Implement Microsoft Graph API client
+- [x] Create service to fetch emails from Outlook inbox
+- [x] Implement email filtering (daily digest scope)
+- [x] Add error handling for API calls
+- [ ] Add unit tests for email fetching (outlook service mocked)
 
 ---
 
@@ -72,23 +73,23 @@ Build a butler agent that connects to Outlook and Gmail to summarize daily inbox
 ## Phase 4: Email Processing & Summarization
 
 ### 4.1 Email Data Models
-- [ ] Define email data structure/models
-- [ ] Create unified email interface (for Outlook and Gmail)
-- [ ] Implement email parsing utilities
-- [ ] Add unit tests for data models
+- [x] Define email data structure/models
+- [x] Create unified email interface (for Outlook and Gmail)
+- [x] Implement email parsing utilities
+- [x] Add unit tests for data models
 
 ### 4.2 Email Summarization
-- [ ] Set up Azure OpenAI client
-- [ ] Implement email summarization logic
-- [ ] Create prompt engineering for daily digest
-- [ ] Identify attention/action items from emails
-- [ ] Add unit tests for summarization logic
+- [x] Set up Azure OpenAI client
+- [x] Implement email summarization logic
+- [x] Create prompt engineering for daily digest
+- [x] Identify attention/action items from emails
+- [x] Add unit tests for summarization logic
 
 ### 4.3 Daily Digest Generation
-- [ ] Implement daily digest aggregation
-- [ ] Combine emails from both sources (Outlook + Gmail)
-- [ ] Format digest output
-- [ ] Add unit tests for digest generation
+- [x] Implement daily digest aggregation
+- [x] Combine emails from both sources (Outlook + Gmail)
+- [x] Format digest output
+- [x] Add unit tests for digest generation (orchestrator)
 
 ---
 
@@ -113,14 +114,14 @@ Build a butler agent that connects to Outlook and Gmail to summarize daily inbox
 ## Phase 6: End-to-End Integration
 
 ### 6.1 Main Butler Agent Logic
-- [ ] Create main butler agent orchestrator
-- [ ] Implement daily digest workflow:
+- [x] Create main butler agent orchestrator
+- [x] Implement daily digest workflow:
   - Fetch emails from Outlook
   - Fetch emails from Gmail
   - Summarize and identify actions
   - Create ToDo tasks
-- [ ] Add logging and error handling
-- [ ] Add configuration management
+- [x] Add logging and error handling
+- [x] Add configuration management
 
 ### 6.2 Scheduling/Triggering
 - [ ] Decide on execution method (cron, scheduled job, manual trigger)
@@ -152,8 +153,8 @@ Build a butler agent that connects to Outlook and Gmail to summarize daily inbox
 ## Phase 8: CI/CD
 
 ### 8.1 GitHub Actions Setup
-- [ ] Create `.github/workflows/` directory
-- [ ] Set up CI workflow for:
+- [x] Create `.github/workflows/` directory
+- [x] Set up CI workflow for:
   - Running unit tests
   - Running e2e tests
   - Running ESLint
@@ -162,9 +163,9 @@ Build a butler agent that connects to Outlook and Gmail to summarize daily inbox
 - [ ] Add workflow badges to README
 
 ### 8.2 CI/CD Configuration
-- [ ] Set up test environment variables in GitHub Actions
-- [ ] Configure Azure OpenAI access for e2e tests
-- [ ] Add conditional test execution (skip e2e on PR if needed)
+- [x] Set up test environment variables in GitHub Actions
+- [x] Configure Azure OpenAI access for e2e tests (secrets)
+- [x] Add conditional test execution (e2e on push to main only)
 - [ ] Document CI/CD process
 
 ---
