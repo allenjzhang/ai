@@ -1,0 +1,22 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch Butler Agent",
+            "request": "launch",
+            "type": "node",
+            "program": "${workspaceFolder}/agents/butler/dist/index.js",
+            "runtimeArgs": [
+                "--env-file=.env"
+            ],
+            "cwd": "${workspaceFolder}/agents/butler",
+            "sourceMaps": true,
+            "outFiles": [
+                "${workspaceFolder}/agents/butler/dist/**/*.js"
+            ]
+        }
+    ]
+}

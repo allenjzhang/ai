@@ -103,3 +103,39 @@ export async function fetchGmailEmails(options: GmailOptions): Promise<EmailMess
   messages.sort((a, b) => b.receivedAt.getTime() - a.receivedAt.getTime());
   return messages;
 }
+
+/** Fetch .ics content from a Gmail message (for calendar invites). Returns first calendar part. */
+export async function fetchGmailMessageIcs(
+  messageId: string,
+  options: GmailOptions
+): Promise<string | null> {
+  const { auth } = options;
+  await loadTokens(auth);
+  await getValidAccessToken(auth);
+
+  const { getOAuth2Client } = await import("../auth/google.js");
+  const oauth2Client = getOAuth2Client(auth);
+  const gmailAuth = google.gmail({ version: "v1", auth: oauth2Client });
+
+  const res = await gmailAuth.users.messages.get({
+    userId: "me",
+    id: messageId,
+    format: "full",
+  });
+  const msg = res.data as unknown as GmailMessage;
+  const parts = msg.payload?.parts ?? [];
+  const icsPart = parts.find(
+    (p) =>
+      p.body?.data &&
+      (p.mimeType === "text/calendar" ||
+        p.mimeType === "application/ics" ||
+        (p as { filename?: string }).filename?.toLowerCase().endsWith(".ics"))
+  );
+  if (!icsPart?.body?.data) {
+    if (msg.payload?.body?.data && (msg.payload as { mimeType?: string }).mimeType === "text/calendar") {
+      return decodeBase64Url(msg.payload.body.data);
+    }
+    return null;
+  }
+  return decodeBase64Url(icsPart.body.data);
+}

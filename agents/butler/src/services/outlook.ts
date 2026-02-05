@@ -66,3 +66,30 @@ export async function fetchOutlookEmails(
   const value: GraphMessage[] = response.value ?? [];
   return value.map((m) => toEmailMessage(m, "outlook"));
 }
+
+/** Fetch .ics attachment content for a message (for calendar invites). Returns first .ics found. */
+export async function fetchOutlookMessageIcs(
+  messageId: string,
+  options: { auth: MicrosoftAuthConfig }
+): Promise<string | null> {
+  const { auth } = options;
+  await ensureCacheDir(auth.tokenCachePath);
+  const token = await acquireTokenForGraph(auth);
+  const client = Client.init({ authProvider: (done) => done(null, token) });
+
+  const res = await client
+    .api(`${GRAPH_ME_MESSAGES}/${messageId}/attachments`)
+    .get();
+
+  const attachments: Array<{ name?: string; contentType?: string; contentBytes?: string }> =
+    res.value ?? [];
+  const ics = attachments.find(
+    (a) =>
+      a.contentBytes &&
+      (a.name?.toLowerCase().endsWith(".ics") ||
+        a.contentType === "text/calendar" ||
+        a.contentType === "application/ics")
+  );
+  if (!ics?.contentBytes) return null;
+  return Buffer.from(ics.contentBytes, "base64").toString("utf-8");
+}

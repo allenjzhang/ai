@@ -1,11 +1,12 @@
 /**
- * Butler agent orchestrator: Outlook + Gmail → summarize → ToDo.
+ * Butler agent orchestrator: Outlook + Gmail → summarize → ToDo; also creates ToDo entries for calendar invites.
  */
 import { config } from "./config.js";
 import { fetchOutlookEmails } from "./services/outlook.js";
 import { fetchGmailEmails } from "./services/gmail.js";
 import { summarizeEmails } from "./services/summarize.js";
-import { createDailyTodoWithSubtasks } from "./services/todo.js";
+import { createDailyTodoWithSubtasks, createTodoFromCalendarInvite } from "./services/todo.js";
+import { getCalendarInvitesFromEmails } from "./services/calendarToTodo.js";
 import type { EmailMessage } from "./types/email.js";
 
 export interface RunOptions {
@@ -19,6 +20,8 @@ export interface RunOptions {
   skipGmail?: boolean;
   /** Skip ToDo creation (dry run). */
   skipTodo?: boolean;
+  /** Skip creating ToDo entries from calendar invites (default false). */
+  skipCalendarToTodo?: boolean;
 }
 
 export interface RunResult {
@@ -26,6 +29,8 @@ export interface RunResult {
   summary: string;
   actionItemCount: number;
   todoTaskId?: string;
+  /** Task IDs for calendar-invite ToDo entries created. */
+  calendarTodoTaskIds?: string[];
   errors: string[];
 }
 
@@ -36,44 +41,67 @@ export async function runButler(options: RunOptions = {}): Promise<RunResult> {
     skipOutlook = false,
     skipGmail = false,
     skipTodo = false,
+    skipCalendarToTodo = false,
   } = options;
 
   const errors: string[] = [];
   const emails: EmailMessage[] = [];
+  const calendarTodoTaskIds: string[] = [];
 
   if (!skipOutlook) {
-    try {
-      const msAuth = {
-        clientId: config.microsoft.clientId(),
-        tenantId: config.microsoft.tenantId(),
-        clientSecret: config.microsoft.clientSecret(),
-        tokenCachePath: config.microsoft.tokenCachePath(),
-      };
-      const outlookEmails = await fetchOutlookEmails({ auth: msAuth, hoursBack });
-      emails.push(...outlookEmails);
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      errors.push(`Outlook: ${msg}`);
+    const msAuth = config.getMicrosoftAuth();
+    if (msAuth) {
+      try {
+        const outlookEmails = await fetchOutlookEmails({ auth: msAuth, hoursBack });
+        emails.push(...outlookEmails);
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        errors.push(`Outlook: ${msg}`);
+      }
     }
   }
 
   if (!skipGmail) {
-    try {
-      const googleAuth = {
-        clientId: config.google.clientId(),
-        clientSecret: config.google.clientSecret(),
-        redirectUri: config.google.redirectUri(),
-        tokenPath: config.google.tokenPath(),
-      };
-      const gmailEmails = await fetchGmailEmails({ auth: googleAuth, hoursBack });
-      emails.push(...gmailEmails);
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      errors.push(`Gmail: ${msg}`);
+    const googleAuth = config.getGoogleAuth();
+    if (googleAuth) {
+      try {
+        const gmailEmails = await fetchGmailEmails({ auth: googleAuth, hoursBack });
+        emails.push(...gmailEmails);
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        errors.push(`Gmail: ${msg}`);
+      }
     }
   }
 
   emails.sort((a, b) => b.receivedAt.getTime() - a.receivedAt.getTime());
+
+  const msAuthForTodo = config.getMicrosoftAuth();
+  const googleAuthForTodo = config.getGoogleAuth();
+
+  if (emails.length > 0 && !skipTodo && !skipCalendarToTodo && msAuthForTodo) {
+    try {
+      const calendarInvites = await getCalendarInvitesFromEmails(emails, {
+        outlookAuth: msAuthForTodo,
+        gmailAuth: googleAuthForTodo ?? null,
+      });
+      for (const { invite } of calendarInvites) {
+        try {
+          const taskId = await createTodoFromCalendarInvite(
+            { auth: msAuthForTodo, listName: todoListName },
+            invite
+          );
+          calendarTodoTaskIds.push(taskId);
+        } catch (e) {
+          const msg = e instanceof Error ? e.message : String(e);
+          errors.push(`Calendar ToDo (${invite.title}): ${msg}`);
+        }
+      }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      errors.push(`Calendar invites: ${msg}`);
+    }
+  }
 
   let summary = "No emails to summarize.";
   let actionItemCount = 0;
@@ -85,23 +113,21 @@ export async function runButler(options: RunOptions = {}): Promise<RunResult> {
         endpoint: config.azureOpenAI.endpoint(),
         apiKey: config.azureOpenAI.apiKey(),
         deployment: config.azureOpenAI.deployment(),
+        apiVersion: config.azureOpenAI.apiVersion(),
       });
       summary = digest.summary;
       actionItemCount = digest.actionItems.length;
 
       if (!skipTodo && digest.actionItems.length > 0) {
-        const msAuth = {
-          clientId: config.microsoft.clientId(),
-          tenantId: config.microsoft.tenantId(),
-          clientSecret: config.microsoft.clientSecret(),
-          tokenCachePath: config.microsoft.tokenCachePath(),
-        };
-        todoTaskId = await createDailyTodoWithSubtasks(
-          { auth: msAuth, listName: todoListName },
-          new Date(),
-          digest.actionItems,
-          digest.summary
-        );
+        const msAuth = config.getMicrosoftAuth();
+        if (msAuth) {
+          todoTaskId = await createDailyTodoWithSubtasks(
+            { auth: msAuth, listName: todoListName },
+            new Date(),
+            digest.actionItems,
+            digest.summary
+          );
+        }
       }
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
@@ -114,6 +140,7 @@ export async function runButler(options: RunOptions = {}): Promise<RunResult> {
     summary,
     actionItemCount,
     todoTaskId,
+    calendarTodoTaskIds: calendarTodoTaskIds.length > 0 ? calendarTodoTaskIds : undefined,
     errors,
   };
 }

@@ -8,6 +8,8 @@ export interface SummarizeConfig {
   endpoint: string;
   apiKey: string;
   deployment: string;
+  /** Azure OpenAI API version (e.g. 2024-02-15-preview). Required by Azure. */
+  apiVersion?: string;
 }
 
 const SYSTEM_PROMPT = `You are a butler assistant. Given a list of emails (subject, from, snippet), produce:
@@ -32,7 +34,8 @@ export async function summarizeEmails(
     return { summary: "No new emails in the period.", actionItems: [] };
   }
 
-  const baseURL = `${cfg.endpoint.replace(/\/$/, "")}/openai/deployments/${cfg.deployment}`;
+  const apiVersion = cfg.apiVersion ?? "2024-02-15-preview";
+  const baseURL = `${cfg.endpoint.replace(/\/$/, "")}/openai/v1`;
   const client = new OpenAI({
     apiKey: cfg.apiKey,
     baseURL,

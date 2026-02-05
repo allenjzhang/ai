@@ -9,6 +9,9 @@ export async function run(): Promise<void> {
   console.log("Summary:", result.summary);
   console.log("Action items:", result.actionItemCount);
   if (result.todoTaskId) console.log("ToDo task ID:", result.todoTaskId);
+  if (result.calendarTodoTaskIds?.length) {
+    console.log("Calendar-invite ToDo task IDs:", result.calendarTodoTaskIds);
+  }
   if (result.errors.length > 0) {
     console.error("Errors:", result.errors);
   }
