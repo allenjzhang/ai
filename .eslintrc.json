@@ -20,5 +20,13 @@
       "plugins": ["@typescript-eslint"],
       "rules": {}
     }
+    ,
+    {
+      "files": ["**/*.md"],
+      "processor": "markdown/markdown",
+      "extends": ["plugin:markdown/recommended", "plugin:prettier/recommended"],
+      "plugins": ["markdown"],
+      "rules": {}
+    }
   ]
 }
