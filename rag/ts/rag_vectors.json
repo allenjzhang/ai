@@ -1,0 +1,22 @@
+[
+  {
+    "id": "1",
+    "vector": [
+      1,
+      0,
+      0
+    ],
+    "text": "one",
+    "source": "s"
+  },
+  {
+    "id": "2",
+    "vector": [
+      0,
+      1,
+      0
+    ],
+    "text": "two",
+    "source": "s"
+  }
+]
