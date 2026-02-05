@@ -1,14 +1,15 @@
 import { pipeline, env } from "@xenova/transformers";
 
-// Run embeddings locally without remote model loading
+// Allow downloading model on first use, then cache it locally
+env.allowRemoteModels = true;
 env.allowLocalModels = true;
-env.allowRemoteModels = false;
 
 let extractor: any = null;
 
 export async function getLocalEmbeddings(texts: string[]): Promise<number[][]> {
   if (!extractor) {
     // Initialize the embedding pipeline (runs locally in-process)
+    // Downloads model on first run, caches it for future runs
     extractor = await pipeline("feature-extraction", "Xenova/all-MiniLM-L6-v2");
   }
 

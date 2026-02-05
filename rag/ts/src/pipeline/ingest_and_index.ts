@@ -11,7 +11,7 @@ export async function ingestAndIndexDir(dirPath: string) {
   for (const doc of docs) {
     const chunks = chunkText(doc.text, 1000, 200);
     // create embeddings in batches
-    const embeddings = await getLocalEmbeddings(chunks)
+    const embeddings = await getLocalEmbeddings(chunks);
     for (let i = 0; i < chunks.length; i++) {
       const id = crypto.randomUUID();
       store.add({
@@ -28,7 +28,7 @@ export async function ingestAndIndexFile(filePath: string) {
   const docs = await ingestTextFile(filePath);
   for (const doc of docs) {
     const chunks = chunkText(doc.text, 1000, 200);
-    const embeddings = await getLocalEmbeddings(chunks)
+    const embeddings = await getLocalEmbeddings(chunks);
     for (let i = 0; i < chunks.length; i++) {
       const id = crypto.randomUUID();
       store.add({
