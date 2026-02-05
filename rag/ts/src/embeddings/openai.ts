@@ -1,34 +1,27 @@
-const OPENAI_EMBED_URL = "https://api.openai.com/v1/embeddings";
+import { pipeline, env } from "@xenova/transformers";
 
-export async function getOpenAIEmbeddings(
-  texts: string[],
-  apiKey?: string,
-): Promise<number[][]> {
-  const key = apiKey ?? process.env.OPENAI_API_KEY;
-  if (!key) throw new Error("OPENAI_API_KEY not set");
+// Run embeddings locally without remote model loading
+env.allowLocalModels = true;
+env.allowRemoteModels = false;
 
-  const body = {
-    input: texts,
-    model: "text-embedding-3-small",
-  };
+let extractor: any = null;
 
-  const res = await fetch(OPENAI_EMBED_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${key}`,
-    },
-    body: JSON.stringify(body),
-  });
-
-  if (!res.ok) {
-    const t = await res.text();
-    throw new Error(`OpenAI embed error: ${res.status} ${t}`);
+export async function getLocalEmbeddings(texts: string[]): Promise<number[][]> {
+  if (!extractor) {
+    // Initialize the embedding pipeline (runs locally in-process)
+    extractor = await pipeline("feature-extraction", "Xenova/all-MiniLM-L6-v2");
   }
 
-  const json = await res.json();
-  // API returns data[].embedding
-  return json.data.map((d: any) => d.embedding as number[]);
+  const result = await extractor(texts, { pooling: "mean", normalize: true });
+  // Convert tensor to array of embeddings (384 dimensions each)
+  const embeddings: number[][] = [];
+  const data = result.data;
+  for (let i = 0; i < texts.length; i++) {
+    const start = i * 384;
+    const end = start + 384;
+    embeddings.push(Array.from(data.slice(start, end)));
+  }
+  return embeddings;
 }
 
-export default getOpenAIEmbeddings;
+export default getLocalEmbeddings;

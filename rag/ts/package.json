@@ -9,6 +9,7 @@
     "test": "npm run build && node ./dist/tests/runTests.js"
   },
   "dependencies": {
+    "@xenova/transformers": "^2.6.0",
     "dotenv": "^16.0.0"
   },
   "devDependencies": {

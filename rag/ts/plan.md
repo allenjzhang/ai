@@ -67,8 +67,8 @@ Create a small Retrieval-Augmented Generation (RAG) project in TypeScript that:
 ## Implementation notes & recommendations
 
 - Use TypeScript and keep modules small and testable.
+- Local embeddings: Uses `Xenova/all-MiniLM-L6-v2` (all-MiniLM-L6-v2 via ONNX via `@xenova/transformers`). Runs in-process, no external API calls.
 - For PDF parsing, consider `pdf-parse` (Node) or a server-side helper.
-- For embeddings, support both OpenAI-style hosted embeddings and local models (config via ENV).
 - Start with an in-memory vector store (simple cosine search over float32 arrays) for speed of iteration.
 - Store source, chunk index, and original text in the vector metadata for traceability.
 
@@ -86,7 +86,7 @@ Create a small Retrieval-Augmented Generation (RAG) project in TypeScript that:
 
 ## Decisions (user choices)
 
-- Embeddings provider: OpenAI embeddings (hosted) — configurable via `OPENAI_API_KEY`.
+- Embeddings provider: Local embeddings (`Xenova/all-MiniLM-L6-v2`) — runs in-process, no API calls, 384-dim vectors.
 - Interface: CLI interactive chat (v1).
 - Storage: local persistence (JSON file for the in-memory vector store v1).
 
